@@ -47,10 +47,10 @@ I then explored different color spaces and different parameters
 
 Here is how images look in RGB and YCrCb color space. I tried HLS and LUV and eventually selected YCrCb. 
 
-[image2]
+![image2]
 rgb
 
-[image3]
+![image3]
 YCrCb
 
 
