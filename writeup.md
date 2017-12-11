@@ -72,11 +72,11 @@ hog_feat = True # HOG features on or off
 y_start_stop = [400, 656] # Min and max in y to search in slide_window()
 '''
 
-[image4]
+![image4]
 
 
 
-[image5]
+![image5]
 
 
 
@@ -101,11 +101,11 @@ Line 111 in helper_func.py shows slide_window function. I used the overlap facto
 * Used heat maps to be properly sure about detecting right vehicles on the road. 
 * Careful selection of HOG parameters 
 
-[image7]
+![image7]
 
 
 
-[image6]
+![image6]
 
 
 ---
@@ -114,7 +114,7 @@ Line 111 in helper_func.py shows slide_window function. I used the overlap facto
 
 #### 1. Provide a link to your final video output.  
 
-Here's the video: [video1](./tracked_project_video.mp4)
+Here's the video: ![video1](./tracked_project_video.mp4)
 
 
 
