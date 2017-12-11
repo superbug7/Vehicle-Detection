@@ -114,7 +114,7 @@ Line 111 in helper_func.py shows slide_window function. I used the overlap facto
 
 #### 1. Provide a link to your final video output.  
 
-Here's the video: ![video1](./tracked_project_video.mp4)
+Here's the video: ![Output video](./tracked_project_video.mp4)
 
 
 
