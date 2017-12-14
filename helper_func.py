@@ -61,10 +61,10 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
     # Create a list to append feature vectors to
     features = []
     # Iterate through the list of images
-    for file in imgs:
+    for image in imgs:
         file_features = []
         # Read in each one by one
-        image = mpimg.imread(file)
+        #image = cv2.imread(file)
         # apply color conversion if other than 'RGB'
         if color_space != 'RGB':
             if color_space == 'HSV':
@@ -109,14 +109,14 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
 # window size (x and y dimensions),  
 # and overlap fraction (for both x and y)
 def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], 
-                    xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
+                    xy_window=(64, 64), xy_overlap=(0.75, 0.75)):
     # If x and/or y start/stop positions not defined, set to image size
     if x_start_stop[0] == None:
         x_start_stop[0] = 0
     if x_start_stop[1] == None:
         x_start_stop[1] = img.shape[1]
     if y_start_stop[0] == None:
-        y_start_stop[0] = 450
+        y_start_stop[0] = 400
     if y_start_stop[1] == None:
         y_start_stop[1] = img.shape[0]
     # Compute the span of the region to be searched    
@@ -177,14 +177,14 @@ def find_cars(img, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, ce
     ch3 = ctrans_tosearch[:,:,2]
 
     # Define blocks and steps as above
-    nxblocks = (ch1.shape[1] // pix_per_cell) - cell_per_block + 1
-    nyblocks = (ch1.shape[0] // pix_per_cell) - cell_per_block + 1 
+    nxblocks = (ch1.shape[1] // pix_per_cell) -  1
+    nyblocks = (ch1.shape[0] // pix_per_cell) -  1 
     nfeat_per_block = orient*cell_per_block**2
     
     # 64 was the orginal sampling rate, with 8 cells and 8 pix per cell
     window = 64
-    nblocks_per_window = (window // pix_per_cell) - cell_per_block + 1
-    cells_per_step = 2  # Instead of overlap, define how many cells to step
+    nblocks_per_window = (window // pix_per_cell) - 1
+    cells_per_step = 2 #2  # Instead of overlap, define how many cells to step
     nxsteps = (nxblocks - nblocks_per_window) // cells_per_step
     nysteps = (nyblocks - nblocks_per_window) // cells_per_step
     

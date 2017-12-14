@@ -9,6 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from helper_func import *
 import pickle
+import random
+%matplotlib inline
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
 # for scikit-learn >= 0.18 use:
 from sklearn.model_selection import train_test_split
@@ -21,6 +23,22 @@ from IPython.display import HTML
 # Define a function to extract features from a single image window
 # This function is very similar to extract_features()
 # just for a single image rather than list of images
+def augment_image(img):
+   new_img = cv2.GaussianBlur(img, (3,3), 0)
+   #new_img = cv2.cvtColor(new_img, cv2.COLOR_YUV2RGB)
+   new_img = cv2.cvtColor(new_img, cv2.COLOR_RGB2HSV)
+   new_img = np.array(new_img, dtype = np.float64)
+   #Generate new random brightness
+   random_bright = .5+random.uniform(0.3,1.0)
+   new_img[:,:,2] = random_bright*new_img[:,:,2]
+   new_img[:,:,2][new_img[:,:,2]>255]  = 255
+   new_img = np.array(new_img, dtype = np.uint8)
+    #Convert back to RGB colorspace
+   new_img = cv2.cvtColor(new_img, cv2.COLOR_HSV2RGB)
+   #new_img = cv2.cvtColor(new_img, cv2.COLOR_RGB2YUV)
+   return new_img
+
+
 
 
 # Read in cars and notcars
@@ -34,6 +52,7 @@ images = glob.glob('./dataset_nonv/*.png')
 for image in images:
     notcars.append(image)
 
+
 # Reduce the sample size because
 # The quiz evaluator times out after 13s of CPU time
 #sample_size = 500
@@ -41,7 +60,7 @@ for image in images:
 #notcars = notcars[0:sample_size]
 
 color_space = 'YCrCb' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-orient = 9  # HOG orientations
+orient = 32  # HOG orientations
 pix_per_cell = 8 # HOG pixels per cell
 cell_per_block = 2 # HOG cells per block
 hog_channel = "ALL" # Can be 0, 1, 2, or "ALL"
@@ -133,6 +152,16 @@ def find_vehicles_in_frame(image):
   #image = mpimg.imread('test1.jpg')
   svc, X_scaler = pickle.load( open("model.p", "rb" ) )
   box_list = find_cars(image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  box_list += find_cars(image, 400, 464, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  box_list += find_cars(image, 416, 480, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  box_list += find_cars(image, 400, 500, 1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  box_list += find_cars(image, 430, 530, 1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  box_list += find_cars(image, 400, 530, 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  box_list += find_cars(image, 430, 560, 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  box_list += find_cars(image, 400, 600, 3.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+  box_list += find_cars(image, 464, 656, 3.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+
+
   #ystart = 355
   #ystop = 550
   #scale = 1.5
@@ -174,13 +203,14 @@ def main():
   scale = 1.5
 
   ### TRAINING #####
-  train_model(cars, notcars)
+  #train_model(cars, notcars)
   
   ### INFERENCE #####   
-  #image = mpimg.imread('test1.jpg')
+  #myimage = mpimg.imread('./test1.jpg')
   myvid = 'project_video.mp4' 
   find_vehicles_in_video(myvid)
-  
+  #new_img =find_vehicles_in_frame(myimage)
+  #plt.imshow(new_img)
   #out_img, box_list = find_cars(image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
   
   
@@ -213,6 +243,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 
 
 
