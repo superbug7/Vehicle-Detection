@@ -8,18 +8,18 @@ from sklearn.svm import LinearSVC
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from helper_func import *
+from sklearn.model_selection import GridSearchCV
 import pickle
 import random
-%matplotlib inline
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
 # for scikit-learn >= 0.18 use:
 from sklearn.model_selection import train_test_split
 from scipy.ndimage.measurements import label
+from collections import deque
 
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
 #from sklearn.cross_validation import train_test_split
-%matplotlib inline
 # Define a function to extract features from a single image window
 # This function is very similar to extract_features()
 # just for a single image rather than list of images
@@ -105,7 +105,10 @@ def train_model(cars, notcars):
       'pixels per cell and', cell_per_block,'cells per block')
   print('Feature vector length:', len(X_train[0]))
   # Use a linear SVC 
-  svc = LinearSVC()
+  parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
+  svr = svm.SVC()
+  svc = GridSearchCV(svr, parameters)
+  #svc = LinearSVC()
   # Check the training time for the SVC
   t=time.time()
   svc.fit(X_train, y_train)
@@ -141,26 +144,39 @@ def train_model(cars, notcars):
 #window_img = draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)                    
 
 #plt.imshow(window_img)
-
+count =6
+last_labels = []
+history = deque(maxlen=5)
 
 def find_vehicles_in_frame(image):
-  ystart = 400
-  ystop = 656
-  scale = 1.5
-  box_list1 = []
-  box_list2 = []
-  #image = mpimg.imread('test1.jpg')
-  svc, X_scaler = pickle.load( open("model.p", "rb" ) )
-  box_list = find_cars(image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-  box_list += find_cars(image, 400, 464, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-  box_list += find_cars(image, 416, 480, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-  box_list += find_cars(image, 400, 500, 1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-  box_list += find_cars(image, 430, 530, 1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-  box_list += find_cars(image, 400, 530, 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-  box_list += find_cars(image, 430, 560, 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-  box_list += find_cars(image, 400, 600, 3.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
-  box_list += find_cars(image, 464, 656, 3.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    global count
+    global last_labels
 
+  #if count < 2:
+  #  count = count + 1
+  #  draw_img = draw_labeled_bboxes(np.copy(image), last_labels)
+  #  return draw_img
+    #draw_img = draw_labeled_bboxes(np.copy(image), labels)
+    #return draw_img
+  #else:
+    #print(count) 
+    ystart = 400
+    ystop = 656
+    scale = 1.5
+    box_list = []
+    #image = mpimg.imread('test1.jpg')
+    svc, X_scaler = pickle.load( open("model.p", "rb" ) )
+
+    box_list = find_cars(image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    box_list += find_cars(image, 400, 464, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    box_list += find_cars(image, 416, 480, 1, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    box_list += find_cars(image, 400, 500, 1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    box_list += find_cars(image, 430, 530, 1.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    box_list += find_cars(image, 400, 530, 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    box_list += find_cars(image, 430, 560, 2, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    box_list += find_cars(image, 400, 600, 3.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    box_list += find_cars(image, 464, 656, 3.5, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
+    last_box_list = box_list
 
   #ystart = 355
   #ystop = 550
@@ -168,22 +184,57 @@ def find_vehicles_in_frame(image):
   #box_list2 = find_cars(image, ystart, ystop, scale, svc, X_scaler, orient, pix_per_cell, cell_per_block, spatial_size, hist_bins)
   #box_list = box_list1 + box_list2
 
-  heat = np.zeros_like(image[:,:,0]).astype(np.float)
+    heat = np.zeros_like(image[:,:,0]).astype(np.float)
 
   # Add heat to each box in box list
-  heat = add_heat(heat,box_list)
-
+    heat = add_heat(heat,box_list)
+    history.append(heat)
+    if count >=6:
+      #print('draw')
+      #print(history)
+      hist1 = 0
+      hist2 = 0 #NULL
+      hist3 = 0 #NULL
+      hist4 = 0 #NULL
+      hist5 = 0 #NULL
+      hist6 = 0 #NULL
+      hist7 = 0 #NULL
+      hist1 = history.popleft() 
+      if history:
+        hist2 = history.popleft() 
+      if history:
+        hist3 = history.popleft() 
+      if history:
+        hist4 = history.popleft() 
+      if history:
+        hist5 = history.popleft() 
+      if history:
+        hist6 = history.popleft() 
+      if history:
+        hist7 = history.popleft() 
+      heat = hist1 + hist2 + hist3 + hist4 + hist5 + hist6 + hist7
   # Apply threshold to help remove false positives
-  heat = apply_threshold(heat,1)
+      heat = apply_threshold(heat,7)
 
   # Visualize the heatmap when displaying
-  heatmap = np.clip(heat, 0, 255)
+      heatmap = np.clip(heat, 0, 255)
 
   # Find final boxes from heatmap using label function
-  labels = label(heatmap)
+      labels = label(heatmap)
+      last_labels = labels
   #return labels, heatmap
-  draw_img = draw_labeled_bboxes(np.copy(image), labels)
-  return draw_img
+      count = 0
+      draw_img = draw_labeled_bboxes(np.copy(image), labels)
+      return draw_img
+
+    else:
+      #print('skip')
+      count = count + 1
+      #heatmap = np.clip(heat, 0, 255)
+      #labels = label(heatmap)
+      #last_labels = labels
+      draw_img = draw_labeled_bboxes(np.copy(image), last_labels)
+      return draw_img
 
 
 def find_vehicles_in_video(video):
@@ -191,7 +242,7 @@ def find_vehicles_in_video(video):
     input_clip = VideoFileClip(video)
     clip = input_clip.fl_image(find_vehicles_in_frame)
     #clip = input_clip.fl_image(save_image)
-    %time clip.write_videofile(output, audio=False)
+    clip.write_videofile(output, audio=False)
 
 
 
@@ -203,6 +254,7 @@ def main():
   scale = 1.5
 
   ### TRAINING #####
+  print(len(cars))
   #train_model(cars, notcars)
   
   ### INFERENCE #####   
